@@ -80,5 +80,3 @@ docker exec -it cassandra cqlsh
 
 USE chat_keyspace;
 SELECT * FROM messages;
-
-now tomorrow i will move to next chat due to memory issue right? so i want this conversation context and also the context you receive very first and describe properly shoetly and sweetly what ias total plan what we done and what is remaining to be done
