@@ -6,6 +6,14 @@ A distributed message service component of a real-time chat system that handles 
 
 The Message Service is responsible for processing incoming chat messages and producing them to Kafka topics for distributed consumption. This service integrates with Spring Boot and leverages Kafka for asynchronous message processing in a distributed architecture.
 
+## Start All Services
+
+Run all required services (Kafka, Cassandra, the message service, etc.) using Docker Compose from the repository root (the folder that contains `docker-compose.yml`):
+
+```bash
+docker compose up -d
+```
+
 ## Service Health Check
 
 ### Endpoint

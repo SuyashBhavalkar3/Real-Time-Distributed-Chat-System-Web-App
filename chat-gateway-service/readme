@@ -1,0 +1,3 @@
+wscat -c ws://localhost:8081/ws/chat?userId=22222222-2222-2222-2222-222222222222
+
+websocket client for testing the chat gateway service.
