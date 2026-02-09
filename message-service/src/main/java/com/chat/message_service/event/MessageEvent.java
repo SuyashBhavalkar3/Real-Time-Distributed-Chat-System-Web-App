@@ -8,15 +8,16 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Data
 public class MessageEvent {
 
-    private UUID conversationId;
     private UUID messageId;
+    private UUID conversationId;
     private UUID senderId;
+    private UUID recipientId;
     private String content;
     private Instant createdAt;
 }

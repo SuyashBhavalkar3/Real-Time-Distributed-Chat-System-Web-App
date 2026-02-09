@@ -1,6 +1,5 @@
 package com.chat.message_service.controller;
 import java.time.Instant;
-import java.util.UUID;
 
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -10,7 +9,6 @@ import org.springframework.web.bind.annotation.RestController;
 import com.chat.message_service.dto.MessageRequest;
 import com.chat.message_service.event.MessageEvent;
 import com.chat.message_service.service.KafkaProducerService;
-import com.datastax.oss.driver.api.core.uuid.Uuids;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.RequiredArgsConstructor;
@@ -25,15 +23,18 @@ public class MessageController {
 
     @PostMapping
     public String sendMessage(@RequestBody MessageRequest request) throws Exception {
-        UUID messageId = Uuids.timeBased();
-        Instant now = Instant.now();
+
+        if (request.getMessageId().version() != 1) {
+            throw new IllegalArgumentException("messageId must be TIMEUUID (version 1)");
+        }
 
         MessageEvent event = MessageEvent.builder()
                 .conversationId(request.getConversationId())
-                .messageId(messageId)
+                .messageId(request.getMessageId())
                 .senderId(request.getSenderId())
+                .recipientId(request.getRecipientId())
                 .content(request.getContent())
-                .createdAt(now)
+                .createdAt(Instant.now())
                 .build();
 
         String eventJson = objectMapper.writeValueAsString(event);
@@ -43,6 +44,7 @@ public class MessageController {
                 eventJson
         );
 
-        return "Message queued with ID: " + messageId;
+        return "Message queued with ID: " + request.getMessageId();
     }
+
 }
