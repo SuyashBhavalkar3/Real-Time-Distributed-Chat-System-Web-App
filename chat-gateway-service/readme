@@ -71,22 +71,6 @@ java -jar target/chat-gateway-service-0.0.1-SNAPSHOT.jar
 
 The service will start on port **8081**.
 
-
-
-{
-  "messageId": "6ba7b810-9dad-11d1-80b4-00c04fd430c8",
-  "conversationId": "33333333-3333-3333-3333-333333333333",
-  "senderId": "11111111-1111-1111-1111-111111111111",
-  "recipientId": "22222222-2222-2222-2222-222222222222",
-  "content": "Hello User B"
-}
-
-
-send to test user B with userId=22222222-2222-2222-2222-222222222222
-thunderclient
-
-if connected, chat gateway will receive the message from Kafka and deliver to user B in real-time via WebSocket connection
-and message-service will return messaage persisted response with 201 Created status code
 ## Configuration
 
 Configuration is managed via `src/main/resources/application.yaml`:
@@ -221,7 +205,7 @@ chat-gateway-service/
 ## Kafka Topics
 
 | Topic | Purpose | Consumer Group |
-|-------|---------|--- |
+|-------|---------|----------------|
 | `chat-messages` | All chat messages to be delivered to users | `websocket-group` |
 
 ## Notes & Best Practices
