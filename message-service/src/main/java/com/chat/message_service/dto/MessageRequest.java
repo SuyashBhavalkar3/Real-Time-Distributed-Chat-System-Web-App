@@ -10,9 +10,6 @@ import lombok.Data;
 public class MessageRequest {
 
     @NotNull
-    private UUID messageId;
-
-    @NotNull
     private UUID conversationId;
 
     @NotNull
