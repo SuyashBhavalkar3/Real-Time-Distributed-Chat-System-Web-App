@@ -1,0 +1,90 @@
+# Message Service
+
+A distributed message service component of a real-time chat system that handles message producing and delivery using Apache Kafka as the messaging backbone.
+
+## Overview
+
+The Message Service is responsible for processing incoming chat messages and producing them to Kafka topics for distributed consumption. This service integrates with Spring Boot and leverages Kafka for asynchronous message processing in a distributed architecture.
+
+## Start All Services
+
+Run all required services (Kafka, Cassandra, the message service, etc.) using Docker Compose from the repository root (the folder that contains `docker-compose.yml`):
+
+```bash
+docker compose up -d
+```
+
+## Service Health Check
+
+### Endpoint
+
+```
+GET http://localhost:8081/actuator/health
+```
+
+### Purpose
+
+Use this endpoint to check if the service is up and running. The response will indicate the status of the service, such as "UP" or "DOWN".
+
+### Expected Response
+
+A successful response indicates that the service is running properly. Once confirmed, you can proceed to test the message sending functionality.
+
+## Message Sending
+
+### Endpoint
+
+```
+POST http://localhost:8081/messages
+```
+
+### Purpose
+
+This endpoint is used to send messages in the chat system. It receives message data and produces it to the Kafka message broker.
+
+### Request Body
+
+```json
+{
+  "conversationId": "11111111-1111-1111-1111-111111111111",
+  "senderId": "22222222-2222-2222-2222-222222222222",
+  "content": "Hello Distributed Worl"
+}
+```
+
+### Parameters
+
+- **conversationId** (UUID): The unique identifier of the conversation thread
+- **senderId** (UUID): The unique identifier of the message sender
+- **content** (String): The message content to be sent
+
+### Expected Response
+
+If the service is functioning correctly, you will receive a successful response indicating that the message has been sent and produced to the Kafka topic.
+
+## Verification
+
+### Consuming Messages from Kafka
+
+To verify that the Message Service is working correctly and that messages are being produced as expected, you can consume messages from the Kafka queue:
+
+```bash
+docker exec -it kafka kafka-console-consumer --bootstrap-server localhost:9092 --topic chat-messages --from-beginning
+```
+
+### How It Works
+
+This command allows you to consume messages from the `chat-messages` topic in Kafka. By running this command, you can observe the messages that have been sent to the topic, which confirms that:
+
+- The Message Service is functioning correctly
+- Messages are being produced as expected
+- The Kafka integration is working properly
+
+## Next Steps
+
+Once you have verified the service is running and messages are being produced to Kafka correctly, you can proceed to integrate additional system components or conduct further testing with other services in the distributed architecture.
+
+docker exec -it cassandra cqlsh
+
+USE chat_keyspace;
+SELECT * FROM messages;
