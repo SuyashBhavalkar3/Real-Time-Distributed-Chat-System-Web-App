@@ -121,4 +121,4 @@ This command allows you to consume messages from the `chat-messages` topic in Ka
 
 ## Next Steps
 
-Once you have verified the service is running and messages are being produced to Kafka correctly, you can proceed to integrate additional system components or conduct further testing with other services in the distributed architecture.
+Once you have verified the service is running and messages are being produced to Kafka correctly, you can proceed to integrate additional system components or conduct further testing with other services in the distributed architecture. 
