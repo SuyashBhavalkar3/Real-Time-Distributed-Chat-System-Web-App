@@ -46,6 +46,7 @@ The Chat Gateway Service is responsible for:
 - **Java 21 LTS** or higher
 - **Apache Kafka** running on `localhost:9092`
 - **Maven 3.6+** for building
+- **Redis** (optional, for future session management and caching)
 
 ## Installation & Setup
 
@@ -89,6 +90,10 @@ spring:
       auto-offset-reset: earliest     # Start from earliest message if no offset
       key-deserializer: StringDeserializer
       value-deserializer: StringDeserializer
+  data:
+    redis:
+      host: localhost                 # Redis host (optional, for future use)
+      port: 6379                      # Redis port (optional, for future use)
 ```
 
 ### Configuration Options
@@ -99,6 +104,8 @@ spring:
 | `spring.kafka.bootstrap-servers` | localhost:9092 | Kafka broker connection string |
 | `spring.kafka.consumer.group-id` | websocket-group | Kafka consumer group |
 | `spring.kafka.consumer.auto-offset-reset` | earliest | Offset reset strategy |
+| `spring.data.redis.host` | localhost | Redis host (optional, for future use) |
+| `spring.data.redis.port` | 6379 | Redis port (optional, for future use) |
 
 ## WebSocket API
 
@@ -172,6 +179,7 @@ curl -X POST http://localhost:8080/messages \
 | `kafka-streams` | Stream processing capabilities |
 | `jackson-databind` | JSON serialization/deserialization |
 | `lombok` | Reduce boilerplate code |
+| `spring-boot-starter-data-redis` | Redis integration (optional, for future use) |
 
 ## Project Structure
 
@@ -215,6 +223,7 @@ chat-gateway-service/
 - **UUID Format**: User IDs must be valid UUIDs (v1 format recommended)
 - **Message Delivery**: Messages are delivered only to connected users; offline users won't receive them
 - **Consumer Group**: Multiple gateway instances can use the same consumer group for load distribution
+- **Redis Integration**: Redis is configured for potential future use in session management and caching, though not currently utilized
 
 ## Troubleshooting
 
