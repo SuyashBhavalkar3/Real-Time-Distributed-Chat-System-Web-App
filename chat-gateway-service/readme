@@ -245,3 +245,28 @@ chat-gateway-service/
 ## License
 
 This project is part of the Real-Time Distributed Chat System.
+
+## Additional Testing
+
+### Checking User Sessions in Redis
+
+To verify user session management (if Redis is enabled):
+
+1. Connect a user via WebSocket:
+   ```bash
+   wscat -c ws://localhost:8081/ws/chat?userId=12345678-1234-5678-1234-567812345678
+   ```
+
+2. Check Redis for the session:
+   ```bash
+   docker exec -it redis redis-cli
+   ```
+
+   Inside Redis CLI:
+   ```redis
+   keys *
+   TTL user:12345678-1234-5678-1234-567812345678
+   get user:12345678-1234-5678-1234-567812345678
+   ```
+
+   The TTL command should return an integer near 60, decreasing by 1 every second. This indicates the session TTL set to expire after 60 seconds of inactivity.

@@ -4,6 +4,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
+
 @Service
 public class PresenceService {
 
@@ -17,15 +19,15 @@ public class PresenceService {
     }
 
     public void registerUser(String userId) {
-        String key = "user:" + userId;
-        redisTemplate.opsForValue().set(key, instanceId);
-        System.out.println("Registered presence for user: " + userId);
+        redisTemplate.opsForValue()
+                .set("user:" + userId, instanceId, Duration.ofSeconds(60));
     }
 
     public void removeUser(String userId) {
-    String key = "user:" + userId;
-    redisTemplate.delete(key);
-    System.out.println("Removed presence for user: " + userId);
+        redisTemplate.delete("user:" + userId);
     }
 
+    public void refreshUser(String userId) {
+        redisTemplate.expire("user:" + userId, Duration.ofSeconds(60));
+    }
 }
