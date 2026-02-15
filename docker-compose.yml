@@ -7,6 +7,9 @@ services:
       ZOOKEEPER_CLIENT_PORT: 2181
     ports:
       - "2181:2181"
+    volumes:
+      - zookeeper_data:/var/lib/zookeeper
+    restart: unless-stopped
 
   kafka:
     image: confluentinc/cp-kafka:7.5.0
@@ -20,6 +23,9 @@ services:
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    restart: unless-stopped
 
   cassandra:
     image: cassandra:4.1
@@ -28,10 +34,41 @@ services:
       - "9042:9042"
     environment:
       CASSANDRA_CLUSTER_NAME: chat-cluster
-      
+    volumes:
+      - cassandra_data:/var/lib/cassandra
+    healthcheck:
+      test: ["CMD-SHELL", "cqlsh localhost 9042 -e 'DESCRIBE KEYSPACES'"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  cassandra-init:
+    image: cassandra:4.1
+    depends_on:
+      cassandra:
+        condition: service_healthy
+    entrypoint: >
+      bash -c "
+      echo 'Ensuring keyspace exists...';
+      cqlsh cassandra -e \"
+      CREATE KEYSPACE IF NOT EXISTS chat_keyspace
+      WITH replication = {'class':'SimpleStrategy','replication_factor':1};
+      \";
+      echo 'Keyspace ready.';
+      "
+
   redis:
     image: redis:7
     container_name: redis
     ports:
       - "6379:6379"
-    restart: always
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+
+volumes:
+  cassandra_data:
+  kafka_data:
+  zookeeper_data:
+  redis_data:
