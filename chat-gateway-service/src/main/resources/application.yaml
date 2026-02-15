@@ -1,6 +1,9 @@
 server:
   port: 8081
 
+gateway:
+  instance-id: gateway-1
+
 spring:
   data:
     redis:
