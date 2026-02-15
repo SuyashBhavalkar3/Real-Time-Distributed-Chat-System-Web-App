@@ -9,6 +9,8 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
+import com.chat.gateway.service.PresenceService;
+
 import lombok.extern.slf4j.Slf4j;
 
 @Component
@@ -17,10 +19,18 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
 
     private final Map<String, WebSocketSession> sessions = new ConcurrentHashMap<>();
 
+    private final PresenceService presenceService;
+
+    public ChatWebSocketHandler(PresenceService presenceService) {
+        this.presenceService = presenceService;
+    }
+
     @Override
     public void afterConnectionEstablished(WebSocketSession session) {
         String userId = getUserId(session);
         sessions.put(userId, session);
+        presenceService.registerUser(userId);
+        session.getAttributes().put("userId", userId);
         log.info("User connected: {}", userId);
     }
 
@@ -28,7 +38,9 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
         String userId = getUserId(session);
         sessions.remove(userId);
-        log.info("User disconnected: {}", userId);
+        String userIdFromAttributes = (String) session.getAttributes().get("userId");
+        presenceService.removeUser(userIdFromAttributes);
+        log.info("User disconnected: {}", userIdFromAttributes);
     }
 
     private String getUserId(WebSocketSession session) {
