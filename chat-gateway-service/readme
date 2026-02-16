@@ -5,10 +5,10 @@ A stateless, scalable WebSocket gateway service for real-time message delivery i
 ## Overview
 
 The Chat Gateway Service is responsible for:
-- **WebSocket Connection Management**: Maintains persistent WebSocket connections with online users
-- **Real-time Message Delivery**: Consumes messages from Kafka topics and sends them to connected users in real-time
-- **Stateless Architecture**: Can be horizontally scaled without state persistence concerns
-- **User Session Tracking**: Maps user IDs to their active WebSocket sessions
+- WebSocket Connection Management: Maintains persistent WebSocket connections with online users
+- Real-time Message Delivery: Consumes messages from Kafka topics and sends them to connected users in real-time
+- Stateless Architecture: Can be horizontally scaled without state persistence concerns
+- User Session Tracking: Maps user IDs to their active WebSocket sessions
 
 ## Architecture
 
@@ -43,10 +43,10 @@ The Chat Gateway Service is responsible for:
 
 ## Prerequisites
 
-- **Java 21 LTS** or higher
-- **Apache Kafka** running on `localhost:9092`
-- **Maven 3.6+** for building
-- **Redis** (optional, for future session management and caching)
+- Java 21 LTS or higher
+- Apache Kafka running on `localhost:9092`
+- Maven 3.6+ for building
+- Redis (optional, for future session management and caching)
 
 ## Installation & Setup
 
@@ -70,7 +70,7 @@ Or run the compiled JAR:
 java -jar target/chat-gateway-service-0.0.1-SNAPSHOT.jar
 ```
 
-The service will start on port **8081**.
+The service will start on port 8081.
 
 ## Configuration
 
@@ -114,10 +114,10 @@ spring:
 ws://localhost:8081/ws/chat?userId={userId}
 ```
 
-**Parameters:**
+#### Parameters
 - `userId` (required): UUID of the user connecting (must be valid UUID v1 format)
 
-**Example:**
+#### Example
 ```
 ws://localhost:8081/ws/chat?userId=22222222-2222-2222-2222-222222222222
 ```
@@ -152,7 +152,7 @@ wscat -c ws://localhost:8081/ws/chat?userId=22222222-2222-2222-2222-222222222222
 
 ### Sending Test Messages
 
-1. Ensure the **message-service** is running on port 8080
+1. Ensure the message-service is running on port 8080
 2. Send a message via the message service REST API
 3. The gateway will receive it from Kafka and deliver to connected users
 
@@ -202,13 +202,13 @@ chat-gateway-service/
 
 ## Message Flow
 
-1. **User connects** to WebSocket endpoint with their userId
-2. **Gateway stores** the mapping of userId → WebSocket session
-3. **Message Service** receives message and publishes to Kafka `chat-messages` topic
-4. **Kafka Consumer** in Gateway receives the message event
-5. **Gateway looks up** the recipient's WebSocket session
-6. **Message is delivered** to the recipient in real-time
-7. **Recipient receives** the message via open WebSocket connection
+1. User connects to WebSocket endpoint with their userId
+2. Gateway stores the mapping of userId → WebSocket session
+3. Message Service receives message and publishes to Kafka `chat-messages` topic
+4. Kafka Consumer in Gateway receives the message event
+5. Gateway looks up the recipient's WebSocket session
+6. Message is delivered to the recipient in real-time
+7. Recipient receives the message via open WebSocket connection
 
 ## Kafka Topics
 
@@ -218,12 +218,12 @@ chat-gateway-service/
 
 ## Notes & Best Practices
 
-- **Stateless Design**: The gateway is stateless and can be scaled horizontally
-- **Connection Persistence**: WebSocket connections are maintained on the server-side
-- **UUID Format**: User IDs must be valid UUIDs (v1 format recommended)
-- **Message Delivery**: Messages are delivered only to connected users; offline users won't receive them
-- **Consumer Group**: Multiple gateway instances can use the same consumer group for load distribution
-- **Redis Integration**: Redis is configured for potential future use in session management and caching, though not currently utilized
+- Stateless Design: The gateway is stateless and can be scaled horizontally
+- Connection Persistence: WebSocket connections are maintained on the server-side
+- UUID Format: User IDs must be valid UUIDs (v1 format recommended)
+- Message Delivery: Messages are delivered only to connected users; offline users won't receive them
+- Consumer Group: Multiple gateway instances can use the same consumer group for load distribution
+- Redis Integration: Redis is configured for potential future use in session management and caching, though not currently utilized
 
 ## Troubleshooting
 
@@ -270,3 +270,37 @@ To verify user session management (if Redis is enabled):
    ```
 
    The TTL command should return an integer near 60, decreasing by 1 every second. This indicates the session TTL set to expire after 60 seconds of inactivity.
+
+### Running Multiple Instances  
+To test horizontal scalability, you can run multiple instances of the gateway service on different ports:
+```bash
+  cd chat-gateway-service
+  mvn spring-boot:run -Dspring-boot.run.arguments="--server.port=8082 --gateway.instance-id=gateway-2"
+  mvn spring-boot:run -Dspring-boot.run.arguments="--server.port=8083 --gateway.instance-id=gateway-3"
+```
+
+execute redis-cli in vs code terminal
+docker exec -it redis redis-cli
+
+
+Implemented Distributed websocket gateway with Kafka consumer for real-time message delivery. The gateway maintains WebSocket connections with online users and consumes messages from Kafka topics to deliver them in real-time. The service is stateless and can be horizontally scaled without state persistence concerns. User session tracking is implemented using Redis, allowing for efficient management of active WebSocket sessions.
+API endpoint for sending messages to the gateway:
+```bash
+  {
+    "messageId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+    "conversationId": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+    "senderId": "11111111-1111-1111-1111-111111111111",
+    "recipientId": "22222222-2222-2222-2222-222222222222",
+    "content": "Hello from A to B"
+  }
+  ```
+
+  first we have to run the message service on port 8080, then we can send a message to the gateway using the above JSON payload. The gateway will consume the message from Kafka and deliver it to the recipient in real-time if they are connected via WebSocket.
+  and then first connect userB to the gateway using WebSocket:
+  ```bash
+  wscat -c ws://localhost:8081/ws/chat?userId=22222222-2222-2222-2222-222222222222
+  ```
+
+  Then send the message from the message service, and userB should receive it in real-time through the WebSocket connection.
+
+  Added JackSon configuration to handle Java 21 date/time serialization and deserialization, ensuring compatibility with the new date/time API. This allows for proper handling of timestamps in message events without serialization issues.
