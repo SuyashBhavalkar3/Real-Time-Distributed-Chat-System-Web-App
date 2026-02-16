@@ -39,4 +39,7 @@ public class PresenceService {
         return instanceId;
     }
 
+    public void refreshUser(String userId) {
+        redisTemplate.expire("user:" + userId, Duration.ofSeconds(60));
+    }
 }
