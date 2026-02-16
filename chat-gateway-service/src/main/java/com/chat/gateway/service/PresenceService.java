@@ -30,4 +30,16 @@ public class PresenceService {
     public void refreshUser(String userId) {
         redisTemplate.expire("user:" + userId, Duration.ofSeconds(60));
     }
+
+    public String getOwningInstance(String userId) {
+        return redisTemplate.opsForValue().get("user:" + userId);
+    }
+
+    public String getInstanceId() {
+        return instanceId;
+    }
+
+    public void refreshUser(String userId) {
+        redisTemplate.expire("user:" + userId, Duration.ofSeconds(60));
+    }
 }
