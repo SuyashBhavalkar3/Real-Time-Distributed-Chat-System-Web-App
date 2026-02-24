@@ -282,6 +282,12 @@ To test horizontal scalability, you can run multiple instances of the gateway se
 execute redis-cli in vs code terminal
 docker exec -it redis redis-cli
 
+get user:11111111-1111-1111-1111-111111111111
+TTL user:11111111-1111-1111-1111-111111111111
+
+get user:22222222-2222-2222-2222-222222222222
+TTL user:22222222-2222-2222-2222-222222222222
+
 
 Implemented Distributed websocket gateway with Kafka consumer for real-time message delivery. The gateway maintains WebSocket connections with online users and consumes messages from Kafka topics to deliver them in real-time. The service is stateless and can be horizontally scaled without state persistence concerns. User session tracking is implemented using Redis, allowing for efficient management of active WebSocket sessions.
 API endpoint for sending messages to the gateway:
@@ -297,9 +303,17 @@ API endpoint for sending messages to the gateway:
 
   first we have to run the message service on port 8080, then we can send a message to the gateway using the above JSON payload. The gateway will consume the message from Kafka and deliver it to the recipient in real-time if they are connected via WebSocket.
   and then first connect userB to the gateway using WebSocket:
+
+for userA, we can connect to the gateway using WebSocket:
   ```bash
-  wscat -c ws://localhost:8081/ws/chat?userId=22222222-2222-2222-2222-222222222222
+  wscat -c ws://localhost:8081/ws/chat?userId=11111111-1111-1111-1111-111111111111
   ```
+
+for userB, we can connect to the gateway using WebSocket:
+  ```bash
+  wscat -c ws://localhost:8082/ws/chat?userId=22222222-2222-2222-2222-222222222222
+  ```
+
 
   Then send the message from the message service, and userB should receive it in real-time through the WebSocket connection.
 
