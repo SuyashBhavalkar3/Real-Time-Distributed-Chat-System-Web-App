@@ -1,0 +1,106 @@
+# chat-event-schema
+
+## Overview
+`chat-event-schema` is a shared Maven module that defines the **canonical event contracts** for the Real-Time Distributed Chat System. It provides immutable, serializable event types and base interfaces that are used across all microservices for Kafka event publishing and consumption.
+
+## Purpose
+This module serves as the **single source of truth** for event structure in the distributed chat system, ensuring:
+- **Backward compatibility** across microservice versions
+- **Consistent serialization/deserialization** via Jackson
+- **Schema versioning** (v1, v2, etc.) for safe event evolution
+- **Type safety** and compile-time validation across services
+
+## Key Components
+
+### 1. **BaseEvent** (Interface)
+- Location: `com.chat.events.BaseEvent`
+- **Responsibility**: Defines the contract that all event types must implement
+- **Fields**:
+  - `eventId()` - Unique event identifier (UUID)
+  - `occurredAt()` - Timestamp when the event was created (Instant)
+  - `eventType()` - Logical event type (e.g., "MESSAGE", "PRESENCE")
+  - `schemaVersion()` - Explicit version string for schema evolution (e.g., "v1", "v2")
+
+### 2. **MessageEventV1** (Record)
+- Location: `com.chat.events.MessageEventV1`
+- **Immutable record** implementing `BaseEvent`
+- **Fields**:
+  - **BaseEvent fields**: `eventId`, `occurredAt`, `schemaVersion`
+  - **Message-specific fields**: `messageId`, `conversationId`, `senderId`, `recipientId`, `content`
+  - **Event type**: Always returns `"MESSAGE"`
+
+## Usage in Microservices
+
+### 1. **message-service**
+- **Dependency**: `com.chat:chat-event-schema:1.0.0`
+- **Usage**:
+  - **MessageController**: Creates `MessageEventV1` objects when a user sends a message and publishes to Kafka
+  - **KafkaMessageConsumer**: Deserializes `MessageEventV1` from Kafka topics and persists message content to Cassandra
+  - **Serialization**: Jackson `ObjectMapper` serializes/deserializes events to/from JSON
+
+### 2. **chat-gateway-service**
+- **Dependency**: `com.chat:chat-event-schema:1.0.0`
+- **Usage**:
+  - **WebSocketKafkaConsumer**: Listens to Kafka and deserializes `MessageEventV1` objects
+  - **Real-time fanout**: Routes received `MessageEventV1` events to connected WebSocket clients based on recipient ID
+  - **Presence tracking**: Uses event metadata to determine which instance owns which user session
+
+## Kafka Integration
+
+- **Topic**: `chat-messages`
+- **Event Format**: JSON (serialized `MessageEventV1` records)
+- **Consumer Groups**:
+  - `message-group` (message-service) - Persists messages
+  - `websocket-group` (chat-gateway-service) - Delivers to online users
+- **Payload Example**:
+  ```json
+  {
+    "eventId": "550e8400-e29b-41d4-a716-446655440000",
+    "occurredAt": "2025-02-24T10:30:45.123Z",
+    "schemaVersion": "v1",
+    "eventType": "MESSAGE",
+    "messageId": "123e4567-e89b-12d3-a456-426614174000",
+    "conversationId": "987f6543-e89b-12d3-a456-426614174000",
+    "senderId": "a11e9000-e29b-41d4-a716-446655440000",
+    "recipientId": "b22f0111-e29b-41d4-a716-446655440000",
+    "content": "Hello!"
+  }
+  ```
+
+## Dependency Configuration
+
+Add this to any microservice's `pom.xml`:
+```xml
+<dependency>
+    <groupId>com.chat</groupId>
+    <artifactId>chat-event-schema</artifactId>
+    <version>1.0.0</version>
+</dependency>
+```
+
+## Schema Evolution Strategy
+
+- **New field in v2?** Create `MessageEventV2` implementing `BaseEvent`
+- **Breaking changes?** Deploy consumers first, then producers
+- **Backward compatibility**: Always provide a default implementation in the consumer for unknown schema versions
+- **Version indicator**: The `schemaVersion()` method allows consumers to handle different event versions gracefully
+
+## Dependencies
+- **Jackson Core** (2.17.1) - JSON serialization/deserialization
+- **Jackson JSR310 Datatype** (2.17.1) - Java Time support (Instant, etc.)
+- **Java 21** - Minimum required version (records are a core feature)
+
+## Maven Build
+```bash
+cd chat-event-schema
+mvn clean install
+```
+
+This makes the JAR available in the local Maven repository for all other services to consume.
+
+## Guiding Principles
+ **Immutability** - All events are immutable records for safe Kafka replay  
+ **Serializable** - All types are Jackson-friendly  
+ **Versioned** - Explicit `schemaVersion` for forward/backward compatibility  
+ **Minimal** - Only shared contracts; no business logic  
+ **Dependency-free** - Only Jackson annotations; no Spring or other framework bloat
