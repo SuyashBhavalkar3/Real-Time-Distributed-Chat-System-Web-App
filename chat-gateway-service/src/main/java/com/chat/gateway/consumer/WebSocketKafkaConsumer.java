@@ -3,7 +3,7 @@ package com.chat.gateway.consumer;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
-import com.chat.gateway.event.MessageEvent;
+import com.chat.events.MessageEventV1;
 import com.chat.gateway.service.PresenceService;
 import com.chat.gateway.websocket.ChatWebSocketHandler;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -26,10 +26,10 @@ public class WebSocketKafkaConsumer {
         log.info("Kafka event received. Raw payload={}", messageJson);
 
         try {
-            MessageEvent event =
-                    objectMapper.readValue(messageJson, MessageEvent.class);
+                MessageEventV1 event =
+                    objectMapper.readValue(messageJson, MessageEventV1.class);
 
-            String recipient = event.getRecipientId().toString();
+                String recipient = event.recipientId().toString();
 
             String owningInstance = presenceService.getOwningInstance(recipient);
             String currentInstance = presenceService.getInstanceId();
@@ -47,8 +47,8 @@ public class WebSocketKafkaConsumer {
 
             webSocketHandler.sendToUser(recipient, messageJson);
 
-            log.info("Delivered message {} to {} on instance {}",
-                    event.getMessageId(), recipient, currentInstance);
+                log.info("Delivered message {} to {} on instance {}",
+                    event.messageId(), recipient, currentInstance);
 
         } catch (Exception e) {
             log.error("Failed to process Kafka message. Raw payload={}", messageJson, e);

@@ -1,4 +1,4 @@
-package main.java.com.chat.events;
+package com.chat.events;
 
 import java.time.Instant;
 import java.util.UUID;
