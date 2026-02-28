@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chat-gateway
+spec:
+  replicas: 3                     # start with 3 gateway pods
+  selector:
+    matchLabels:
+      app: chat-gateway
+  template:
+    metadata:
+      labels:
+        app: chat-gateway
+    spec:
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: chat-gateway
+          image: chat-gateway-service:latest
+          ports:
+            - containerPort: 8081
+          lifecycle:
+            preStop:
+              exec:
+                command: ["sh", "-c", "sleep 20"]
