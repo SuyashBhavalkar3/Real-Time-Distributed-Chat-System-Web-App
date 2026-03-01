@@ -16,6 +16,7 @@ spec:
       containers:
         - name: chat-gateway
           image: chat-gateway-service:latest
+          imagePullPolicy: never
           ports:
             - containerPort: 8081
           lifecycle:

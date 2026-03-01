@@ -1,23 +1,22 @@
 server:
-  port: 8081
-
-gateway:
-  instance-id: gateway-1
+  port: ${SERVER_PORT:8081}
 
 spring:
-  data:
-    redis:
-      host: localhost
-      port: 6379    
-  
   application:
     name: chat-gateway-service
 
   kafka:
-    bootstrap-servers: localhost:9092
-
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS}
     consumer:
-      group-id: websocket-group
+      group-id: ${SPRING_KAFKA_CONSUMER_GROUP_ID:websocket-group}
       auto-offset-reset: earliest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+
+  data:
+    redis:
+      host: ${SPRING_DATA_REDIS_HOST}
+      port: ${SPRING_DATA_REDIS_PORT}
+
+gateway:
+  instance-id: ${GATEWAY_INSTANCE_ID:gateway-1}

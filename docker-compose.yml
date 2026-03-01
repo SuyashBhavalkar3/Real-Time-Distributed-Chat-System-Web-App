@@ -2,7 +2,6 @@ services:
 
   zookeeper:
     image: confluentinc/cp-zookeeper:7.5.0
-    container_name: zookeeper
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
     ports:
@@ -13,7 +12,6 @@ services:
 
   kafka:
     image: confluentinc/cp-kafka:7.5.0
-    container_name: kafka
     depends_on:
       - zookeeper
     ports:
@@ -21,7 +19,8 @@ services:
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
     volumes:
       - kafka_data:/var/lib/kafka/data
@@ -29,7 +28,6 @@ services:
 
   cassandra:
     image: cassandra:4.1
-    container_name: cassandra
     ports:
       - "9042:9042"
     environment:
@@ -37,7 +35,7 @@ services:
     volumes:
       - cassandra_data:/var/lib/cassandra
     healthcheck:
-      test: ["CMD-SHELL", "cqlsh localhost 9042 -e 'DESCRIBE KEYSPACES'"]
+      test: ["CMD-SHELL", "cqlsh cassandra 9042 -e 'DESCRIBE KEYSPACES'"]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -50,22 +48,56 @@ services:
         condition: service_healthy
     entrypoint: >
       bash -c "
-      echo 'Ensuring keyspace exists...';
-      cqlsh cassandra -e \"
+      cqlsh cassandra 9042 -e \"
       CREATE KEYSPACE IF NOT EXISTS chat_keyspace
       WITH replication = {'class':'SimpleStrategy','replication_factor':1};
       \";
-      echo 'Keyspace ready.';
       "
 
   redis:
     image: redis:7
-    container_name: redis
     ports:
       - "6379:6379"
     volumes:
       - redis_data:/data
     restart: unless-stopped
+
+  message-service:
+    build:
+      context: .
+      dockerfile: message-service/Dockerfile
+    ports:
+      - "8080:8080"
+    depends_on:
+      cassandra:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+    environment:
+      SERVER_PORT: 8080
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      SPRING_DATA_CASSANDRA_CONTACT_POINTS: cassandra
+      SPRING_DATA_CASSANDRA_PORT: 9042
+      SPRING_DATA_CASSANDRA_KEYSPACE_NAME: chat_keyspace
+      SPRING_DATA_CASSANDRA_LOCAL_DATACENTER: datacenter1
+
+  chat-gateway-service:
+    build:
+      context: .
+      dockerfile: chat-gateway-service/Dockerfile
+    ports:
+      - "8081:8081"
+    depends_on:
+      kafka:
+        condition: service_started
+      redis:
+        condition: service_started
+    environment:
+      SERVER_PORT: 8081
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      GATEWAY_INSTANCE_ID: gateway-1
 
 volumes:
   cassandra_data:
